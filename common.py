@@ -29,9 +29,7 @@ def configuration():
 
 def hosts():
     folder = working_folder()
-    filepath = folder + os.path.sep + "hosts"
-    return filepath
+    return folder + os.path.sep + "hosts"
 
 
-if __name__ == "__main__":
-    pass
+pass

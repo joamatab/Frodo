@@ -19,9 +19,8 @@ ja_task_ID_pattern = re.compile(r"^(\d+)-(\d+):\d+$")
 
 
 def smart_get_option(cfg, section, option):
-    if cfg.has_section(section):
-        if cfg.has_option(section, option):
-            return cfg.get(section, option)
+    if cfg.has_section(section) and cfg.has_option(section, option):
+        return cfg.get(section, option)
     return None
 
 
@@ -40,23 +39,22 @@ def exec_qstat(username, password, jobID=None, qstat_username=None):
         return str(e)
     query = "qstat"
     if jobID:
-        query += " -j " + str(jobID)
+        query += f" -j {str(jobID)}"
     if qstat_username:
-        query += " -u " + qstat_username
+        query += f" -u {qstat_username}"
     # print "query:",query
     stdin, stdout, stderr = ssh.exec_command(query)
     err = stderr.read()
     result = stdout.read()
     ssh.close()
     if err:
-        return "Error: " + err
+        return f"Error: {err}"
     return result.decode()
 
 
 def qstat_from_tmp_file(filename="tmp.txt"):
-    fin = open(filename)
-    result = fin.read()
-    fin.close()
+    with open(filename) as fin:
+        result = fin.read()
     return result
 
 
@@ -89,7 +87,7 @@ def records_to_dict(fields, records):
 def parse_qstat_jobID(qstat):
     qstat = qstat[qstat.find("\n") + 1 :]
     records = [list(map(str.strip, x.split(":", 1))) for x in qstat.split("\n")]
-    if len(records) > 0:
+    if records:
         records = list(map(tuple, records))[:-1]
         records = messy_tuples_to_dict(records)
     return records
@@ -128,8 +126,7 @@ def summarize2(records):
 
 def qw_tasks(record):
     ja_task_ID = record["ja-task-ID"]
-    m = ja_task_ID_pattern.match(ja_task_ID)
-    if m:
+    if m := ja_task_ID_pattern.match(ja_task_ID):
         t0 = int(m.groups()[0])
         t1 = int(m.groups()[1])
         return t1 - t0 + 1
@@ -137,7 +134,4 @@ def qw_tasks(record):
         return 1
 
 
-if __name__ == "__main__":
-    # records = parse_qstat2(qstat_from_tmp_file("tmp.txt"))
-    # job = parse_qstat_jobID(qstat_from_tmp_file("tmp2.txt"))
-    pass
+pass
